@@ -1,4 +1,5 @@
 web-eid-auth-token:
   validation:
     use-digidoc4j-prod-configuration: false
-    local-origin: "https://test.web-eid.eu"
+    # local-origin: "https://test.web-eid.eu"
+    local-origin: "https://10.0.0.2"

@@ -22,22 +22,6 @@
 
 package eu.webeid.example.config;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.ObjectFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
-import eu.webeid.security.challenge.ChallengeNonceGenerator;
-import eu.webeid.security.challenge.ChallengeNonceGeneratorBuilder;
-import eu.webeid.security.challenge.ChallengeNonceStore;
-import eu.webeid.security.exceptions.JceException;
-import eu.webeid.security.validator.AuthTokenValidator;
-import eu.webeid.security.validator.AuthTokenValidatorBuilder;
-
-import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -52,13 +36,31 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 
+import javax.servlet.http.HttpSession;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+
+import eu.webeid.security.challenge.ChallengeNonceGenerator;
+import eu.webeid.security.challenge.ChallengeNonceGeneratorBuilder;
+import eu.webeid.security.challenge.ChallengeNonceStore;
+import eu.webeid.security.exceptions.JceException;
+import eu.webeid.security.validator.AuthTokenValidator;
+import eu.webeid.security.validator.AuthTokenValidatorBuilder;
+
 @Configuration
 public class ValidationConfiguration {
 
     private static final Logger LOG = LoggerFactory.getLogger(ValidationConfiguration.class);
 
     private static final long CHALLENGE_NONCE_TTL_MINUTES = 5;
-    private static final String CERTS_RESOURCE_PATH = "/certs/";
+    private static final String CERTS_RESOURCE_PATH = "classpath*:certs/";
     public static final String TRUSTED_CERTIFICATES_JKS = "trusted_certificates.jks";
 
     @Value("${spring.profiles.active}")
@@ -85,7 +87,7 @@ public class ValidationConfiguration {
             CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
 
             PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
-            Resource[] resources = resolver.getResources(CERTS_RESOURCE_PATH + activeProfile + "/*.cer");
+            Resource[] resources = resolver.getResources(CERTS_RESOURCE_PATH + activeProfile + "/*.crt");
 
             for (Resource resource : resources) {
                 X509Certificate caCertificate = (X509Certificate) certFactory.generateCertificate(resource.getInputStream());
@@ -129,10 +131,12 @@ public class ValidationConfiguration {
             AuthTokenValidatorBuilder validatorBuilder = new AuthTokenValidatorBuilder()
                     .withSiteOrigin(URI.create(yamlConfig().getLocalOrigin()))
                     .withTrustedCertificateAuthorities(loadTrustedCACertificatesFromCerFiles())
-                    .withTrustedCertificateAuthorities(loadTrustedCACertificatesFromTrustStore());
+                    // .withTrustedCertificateAuthorities(loadTrustedCACertificatesFromTrustStore());
+                    .withoutUserCertificateRevocationCheckWithOcsp();
             if (activeProfile.equals("dev")) {
                 // Enable support for ESTEID 2015 test certificates in development profile.
-                validatorBuilder = validatorBuilder.withNonceDisabledOcspUrls(URI.create("http://aia.demo.sk.ee/esteid2015"));
+                // validatorBuilder = validatorBuilder.withNonceDisabledOcspUrls(URI.create("http://aia.demo.sk.ee/esteid2015"));
+                // validatorBuilder = validatorBuilder.withNonceDisabledOcspUrls(URI.create("http://ocsp.eid.belgium.be/2"));
             }
             return validatorBuilder.build();
         } catch (JceException e) {

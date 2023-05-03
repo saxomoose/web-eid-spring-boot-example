@@ -7,13 +7,15 @@ spring:
 # - https://docs.spring.io/spring-boot/docs/2.2.5.RELEASE/reference/htmlsingle/#howto-enable-https
 # Note that `server.servlet.session.cookie.secure` is implicitly true when HTTPS is detected.
 server:
-  forward-headers-strategy: native
-  tomcat:
-    remote-ip-header: x-forwarded-for
-    protocol-header: x-forwarded-proto
+  port: 5010
+  # forward-headers-strategy: native
+  # tomcat:
+  #   remote-ip-header: x-forwarded-for
+  #   protocol-header: x-forwarded-proto
 
 logging:
   level:
     eu.webeid.security: DEBUG
     eu.webeid.example: DEBUG
     org.springframework.security.web.csrf.CsrfFilter: DEBUG
+    org.springframework.security.web.FilterChainProxy: DEBUG
